@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Milano Nascosta — La Colonna del Diavolo</title>
+  <meta name="description" content="Milano Nascosta Tours — La Colonna del Diavolo" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body class="show-gate">
+  <main class="hero">
+    <video
+      id="bgVideo"
+      class="bg-video"
+      muted
+      loop
+      playsinline
+      autoplay
+      preload="auto"
+      controls
+      controlslist="nodownload noplaybackrate"
+    >
+      <source src="video.mp4" type="video/mp4" />
+      Il tuo browser non supporta il video HTML5.
+    </video>
+
+    <div class="overlay"></div>
+
+    <section class="content">
+      <p class="eyebrow">Milano Nascosta</p>
+      <h1>MILANO NASCOSTA</h1>
+      <h2>La Colonna del Diavolo</h2>
+    </section>
+
+    <div id="startGate" class="start-gate" aria-live="polite">
+      <div class="gate-panel">
+        <button id="playMutedButton" class="play-button" type="button" aria-label="Avvia video">
+          <span class="play-icon"></span>
+          <span class="play-label">Avvia video</span>
+        </button>
+        <button id="playSoundButton" class="secondary-button" type="button" aria-label="Avvia con audio">
+          Avvia con audio
+        </button>
+        <p class="gate-note">Su alcuni telefoni l'avvio automatico viene bloccato dal browser.</p>
+      </div>
+    </div>
+
+    <footer class="site-footer">
+      <p>Milano Nascosta Tours</p>
+    </footer>
+  </main>
+
+  <script>
+    const video = document.getElementById('bgVideo');
+    const startGate = document.getElementById('startGate');
+    const playMutedButton = document.getElementById('playMutedButton');
+    const playSoundButton = document.getElementById('playSoundButton');
+
+    let playbackConfirmed = false;
+
+    function showGate() {
+      document.body.classList.add('show-gate');
+      document.body.classList.remove('is-playing');
+    }
+
+    function hideGate() {
+      document.body.classList.remove('show-gate');
+      document.body.classList.add('is-playing');
+    }
+
+    function confirmPlaybackSoon() {
+      const startTime = video.currentTime;
+      setTimeout(() => {
+        if (video.currentTime > startTime + 0.05 && !video.paused && !video.ended) {
+          playbackConfirmed = true;
+          hideGate();
+        } else if (!playbackConfirmed) {
+          showGate();
+        }
+      }, 500);
+    }
+
+    async function tryPlay(withSound = false) {
+      try {
+        video.muted = !withSound;
+        await video.play();
+        confirmPlaybackSoon();
+      } catch (err) {
+        if (withSound) {
+          try {
+            video.muted = true;
+            await video.play();
+            confirmPlaybackSoon();
+          } catch (err2) {
+            showGate();
+          }
+        } else {
+          showGate();
+        }
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      showGate();
+      tryPlay(false);
+    });
+
+    playMutedButton.addEventListener('click', () => tryPlay(false));
+    playSoundButton.addEventListener('click', () => tryPlay(true));
+
+    video.addEventListener('timeupdate', () => {
+      if (video.currentTime > 0.15 && !video.paused) {
+        playbackConfirmed = true;
+        hideGate();
+      }
+    });
+
+    video.addEventListener('pause', () => {
+      if (!video.ended) {
+        showGate();
+      }
+    });
+
+    video.addEventListener('ended', () => {
+      if (!video.loop) showGate();
+    });
+
+    video.addEventListener('error', () => {
+      showGate();
+      const note = document.querySelector('.gate-note');
+      if (note) {
+        note.textContent = 'Il video non si è caricato correttamente. Controlla che il file video.mp4 sia nella stessa cartella di index.html.';
+      }
+    });
+  </script>
+</body>
+</html>
